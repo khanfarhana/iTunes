@@ -45,10 +45,6 @@ class ViewController: UIViewController,UISearchBarDelegate {
 
 extension ViewController : UICollectionViewDelegate,UICollectionViewDataSource,UICollectionViewDelegateFlowLayout {
     
-    func collectionView(_ collectionView: UICollectionView, viewForSupplementaryElementOfKind kind: String, at indexPath: IndexPath) -> UICollectionReusableView {
-        let header = collectionView.dequeueReusableSupplementaryView(ofKind: kind, withReuseIdentifier: "HeaderCVC", for: indexPath) as! HeaderCVC
-        return header
-    }
     func searchBarTextDidBeginEditing(_ searchBar: UISearchBar) {
         searching = true
     }

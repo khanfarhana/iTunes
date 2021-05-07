@@ -9,5 +9,4 @@ import UIKit
 
 class HeaderCVC: UICollectionReusableView {
     
-    @IBOutlet weak var searchBar: UISearchBar!
 }
