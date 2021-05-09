@@ -17,7 +17,6 @@ class ViewController: UIViewController,UISearchBarDelegate {
     @IBOutlet weak var actIn: UIActivityIndicatorView!
     @IBOutlet weak var searchBar: UISearchBar!
     @IBOutlet weak var CV: UICollectionView!
-    var animationV = AnimationView()
     var allData = [NSDictionary]()
     var realData = [NSDictionary]()
     var artistName = String()
@@ -26,17 +25,18 @@ class ViewController: UIViewController,UISearchBarDelegate {
     override func viewDidLoad() {
         super.viewDidLoad()
         actIn.hidesWhenStopped = true
-        if searchBar.text?.count == 0{        AF.request("https://itunes.apple.com/search?term=term&device_type=ios").responseJSON {(resp) in
-            if let data = resp.value as? NSDictionary {
-                self.actIn.stopAnimating()
-                self.allData = data.value(forKey: "results") as! [NSDictionary]
-                self.CV.reloadData()
+        if searchBar.text?.count == 0 {
+            AF.request("https://itunes.apple.com/search?term=term&device_type=ios").responseJSON {(resp) in
+                if let data = resp.value as? NSDictionary {
+                    self.actIn.stopAnimating()
+                    self.allData = data.value(forKey: "results") as! [NSDictionary]
+                    self.CV.reloadData()
+                }
+                else {
+                    print("error")
+                }
             }
-            else {
-                print("error")
-            }
-        }
-        searchApi()
+            searchApi()
         }
     }
     
