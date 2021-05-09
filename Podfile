@@ -7,7 +7,7 @@ target 'demo' do
 
   # Pods for demo
 pod 'Alamofire', '~> 5.2'
-
+pod 'lottie-ios' 
 pod 'Kingfisher', '~> 6.0'
 
 end

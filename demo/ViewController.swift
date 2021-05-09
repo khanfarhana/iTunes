@@ -8,38 +8,65 @@
 import UIKit
 import Alamofire
 import Kingfisher
+import Lottie
+import AVKit
 
 class ViewController: UIViewController,UISearchBarDelegate {
+    var player = AVPlayer()
+    
+    @IBOutlet weak var actIn: UIActivityIndicatorView!
     @IBOutlet weak var searchBar: UISearchBar!
     @IBOutlet weak var CV: UICollectionView!
+    var animationV = AnimationView()
     var allData = [NSDictionary]()
     var realData = [NSDictionary]()
     var artistName = String()
-    var searchData = String()
     var searching = false
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        api()
-    }
-    func api()  {
-        AF.request("https://itunes.apple.com/search?term=term&device_type=ios").responseJSON {(resp) in
+        actIn.hidesWhenStopped = true
+        if searchBar.text?.count == 0{        AF.request("https://itunes.apple.com/search?term=term&device_type=ios").responseJSON {(resp) in
             if let data = resp.value as? NSDictionary {
+                self.actIn.stopAnimating()
                 self.allData = data.value(forKey: "results") as! [NSDictionary]
-                self.realData = self.allData
                 self.CV.reloadData()
             }
             else {
                 print("error")
             }
         }
+        searchApi()
+        }
     }
-    func getdata() {
-        api()
-        self.CV.reloadData()
-    }
-    func filterRecords() {
+    
+    func searchApi()  {
+        guard let searchTxt = searchBar.text , searchTxt.count > 0 else {
+            //            self.allData.removeAll()
+            self.CV.reloadData()
+            return
+        }
         
+        AF.request("https://itunes.apple.com/search?term=\(searchTxt)&device_type=ios").responseJSON {(resp) in
+            if let data = resp.value as? NSDictionary {
+                self.actIn.stopAnimating()
+                self.allData = data.value(forKey: "results") as! [NSDictionary]
+                self.CV.reloadData()
+            }
+            else {
+                //                print("error")
+            }
+        }
+    }
+    
+    func filterRecords() {
+        let foundItems = self.realData.filter { (dict) -> Bool in
+            if let val = dict.value(forKey: "artistName") as? String{
+                return val.contains(searchBar.text!)
+            }
+            return false
+        }
+        print("Found count \(foundItems.count)")
     }
 }
 
@@ -59,8 +86,7 @@ extension ViewController : UICollectionViewDelegate,UICollectionViewDataSource,U
         
     }
     func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
-        searchText.count == 0 ? getdata() : filterRecords()
-        self.CV.reloadData()
+        searchApi()
     }
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         return allData.count
@@ -68,22 +94,22 @@ extension ViewController : UICollectionViewDelegate,UICollectionViewDataSource,U
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "CustomCVC", for: indexPath) as! CustomCVC
-        cell.backgroundColor = UIColor.red
+        cell.backgroundColor = UIColor.purple
         cell.layer.cornerRadius = 15
-        artistName = allData[indexPath.row].value(forKey: "artistName") as? String ?? ""
-        cell.artistNameLB.text = artistName
-        let collectionName = allData[indexPath.row].value(forKey: "collectionName") as? String ?? ""
-        cell.collectionNameLb.text = collectionName
-        let trackName = allData[indexPath.row].value(forKey: "trackName") as? String ?? ""
-        cell.trackNameLB.text = trackName
-        let imgg = allData[indexPath.row].value(forKey: "artworkUrl100") as? String ?? ""
+        artistName = allData[indexPath.row].value(forKey: "artistName") as? String ?? "Empty"
+        cell.artistNameLB.text = "Artist: \(artistName)"
+        let collectionName = allData[indexPath.row].value(forKey: "collectionName") as? String ?? "Empty"
+        cell.collectionNameLb.text = "Collection: \(collectionName)"
+        let trackName = allData[indexPath.row].value(forKey: "trackName") as? String ?? "Empty"
+        cell.trackNameLB.text = "Track: \(trackName)"
+        let imgg = allData[indexPath.row].value(forKey: "artworkUrl100") as? String ?? "Empty"
         let url = URL(string: "\(imgg)")
         cell.imgV.kf.setImage(with: url)
         return cell
     }
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
-        return CGSize(width: Int(Float(collectionView.frame.size.width/2))-4, height: 300)
+        return CGSize(width: Int(Float(collectionView.frame.size.width/2))-4, height: 330)
     }
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, minimumInteritemSpacingForSectionAt section: Int) -> CGFloat {
@@ -99,15 +125,12 @@ extension ViewController : UICollectionViewDelegate,UICollectionViewDataSource,U
     }
     
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        let vc = storyboard?.instantiateViewController(withIdentifier: "SongVC") as! SongVC
-        let imgg = allData[indexPath.row].value(forKey: "artworkUrl100") as! String
-        let url = URL(string: imgg)!
-        let data = try? Data(contentsOf: url)
-        vc.img = UIImage(data: data!)!
-        let artist = allData[indexPath.row].value(forKey: "artistName") as? String ?? ""
-        vc.artistName = artist
-        let trackName = allData[indexPath.row].value(forKey: "trackName") as? String ?? ""
-        vc.trackName = trackName
-        self.navigationController?.pushViewController(vc, animated: true)
+        let  previewUrl = allData[indexPath.row].value(forKey: "previewUrl") as? String ?? ""
+        print(previewUrl)
+        player = AVPlayer(url: URL(string: "\(previewUrl)")!)
+        let playerVC = AVPlayerViewController()
+        playerVC.player = player
+        player.play()
+        present(playerVC, animated: true, completion: nil)
     }
 }
